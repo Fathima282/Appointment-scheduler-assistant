@@ -1,0 +1,13 @@
+# Test the API endpoints
+
+# Step 1: OCR (text input)
+curl -X POST http://localhost:5000/api/ocr -H "Content-Type: application/json" -d "{\"text\": \"Book dentist next Friday at 3pm\"}"
+
+# Step 2: Extract entities
+curl -X POST http://localhost:5000/api/extract -H "Content-Type: application/json" -d "{\"raw_text\": \"Book dentist next Friday at 3pm\"}"
+
+# Step 3: Normalize
+curl -X POST http://localhost:5000/api/normalize -H "Content-Type: application/json" -d "{\"entities\": {\"date_phrase\": \"next Friday\", \"time_phrase\": \"3pm\", \"department\": \"dentist\"}}"
+
+# Step 4: Final appointment
+curl -X POST http://localhost:5000/api/appointment -H "Content-Type: application/json" -d "{\"entities\": {\"department\": \"dentist\"}, \"normalized\": {\"date\": \"2025-01-17\", \"time\": \"15:00\", \"tz\": \"Asia/Kolkata\"}}"
