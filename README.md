@@ -26,8 +26,8 @@ cd appointment-scheduler
 2. Create virtual environment:
 ```bash
 python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Mac/Linux
+venv\Scripts\activate  
+source venv/bin/activate  
 ```
 
 3. Install dependencies:
