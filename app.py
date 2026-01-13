@@ -8,30 +8,26 @@ from PIL import Image
 import io
 import re
 
-# Configure Tesseract path (CHANGE THIS to your installation path)
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 app = Flask(__name__)
 CORS(app)
 
-# Timezone
 IST = pytz.timezone('Asia/Kolkata')
 
-# Helper function to get current date in IST
 def get_current_date():
     return datetime.now(IST)
 
-# Step 1: OCR/Text Extraction
 @app.route('/api/ocr', methods=['POST'])
 def ocr_extraction():
     try:
-        # Check if image file is provided
+    
         if 'image' in request.files:
             image_file = request.files['image']
             image = Image.open(io.BytesIO(image_file.read()))
             raw_text = pytesseract.image_to_string(image)
-            confidence = 0.75  # OCR confidence (simulated)
-        # Check if text is provided
+            confidence = 0.75  
+       
         elif 'text' in request.json:
             raw_text = request.json['text']
             confidence = 0.90
@@ -45,13 +41,13 @@ def ocr_extraction():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Step 2: Entity Extraction
+
 @app.route('/api/extract', methods=['POST'])
 def entity_extraction():
     try:
         raw_text = request.json.get('raw_text', '')
         
-        # Extract date phrase
+        
         date_patterns = [
             r'next\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)',
             r'tomorrow',
@@ -67,11 +63,11 @@ def entity_extraction():
                 date_phrase = match.group()
                 break
         
-        # Extract time phrase
+       
         time_match = re.search(r'\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?', raw_text)
         time_phrase = time_match.group() if time_match else None
         
-        # Extract department
+        
         departments = ['dentist', 'cardiology', 'orthopedic', 'pediatric', 'general']
         department = None
         for dept in departments:
@@ -96,7 +92,7 @@ def entity_extraction():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Step 3: Normalization
+
 @app.route('/api/normalize', methods=['POST'])
 def normalization():
     try:
@@ -106,13 +102,13 @@ def normalization():
         
         current_date = get_current_date()
         
-        # Parse date phrase
+       
         if 'tomorrow' in date_phrase:
             target_date = current_date + timedelta(days=1)
         elif 'today' in date_phrase:
             target_date = current_date
         elif 'next' in date_phrase:
-            # Find the next occurrence of the day
+            
             days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
             for i, day in enumerate(days):
                 if day in date_phrase:
@@ -122,7 +118,7 @@ def normalization():
                     target_date = current_date + timedelta(days=days_ahead)
                     break
         else:
-            # Try to parse as date
+            
             try:
                 target_date = dateutil.parser.parse(date_phrase, fuzzy=True)
                 target_date = IST.localize(target_date)
@@ -132,17 +128,17 @@ def normalization():
                     "message": "Could not parse date"
                 }), 400
         
-        # Parse time phrase
+        
         time_phrase_clean = time_phrase.strip()
         
-        # Handle various time formats
+       
         if 'pm' in time_phrase_clean.lower() or 'am' in time_phrase_clean.lower():
             time_obj = dateutil.parser.parse(time_phrase_clean).time()
         else:
-            # Assume 24-hour format or convert based on context
+            
             hour = int(re.search(r'\d{1,2}', time_phrase_clean).group())
             if hour < 12 and hour >= 1:
-                # Could be PM, but we'll assume PM for afternoon appointments
+                
                 hour_24 = hour + 12 if hour < 12 else hour
             else:
                 hour_24 = hour
@@ -159,7 +155,7 @@ def normalization():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Step 4: Final Appointment JSON
+
 @app.route('/api/appointment', methods=['POST'])
 def final_appointment():
     try:
@@ -189,7 +185,7 @@ def final_appointment():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Health check endpoint
+
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({
